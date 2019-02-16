@@ -17,17 +17,18 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>Formyown的小站</title>
+  <title>Repositories | Formyown的小站</title>
   <meta name="keywords" content="Formyown,1119242459">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Formyown的博客">
-<meta property="og:url" content="http://formyown.github.io/index.html">
+<meta property="og:title" content="Repositories">
+<meta property="og:url" content="http://formyown.github.io/repository/index.html">
 <meta property="og:site_name" content="Formyown的博客">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-10-04T14:11:17.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Formyown的博客">
+<meta name="twitter:title" content="Repositories">
   <!-- Canonical links -->
-  <link rel="canonical" href="http://formyown.github.io/index.html">
+  <link rel="canonical" href="http://formyown.github.io/repository/index.html">
   
     <link rel="alternate" href="/atom.xml" title="Formyown的博客" type="application/atom+xml">
   
@@ -44,7 +45,7 @@
 </head>
 
 
-<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+<body class="main-center no-sidebar" itemscope itemtype="http://schema.org/WebPage">
   <header class="header" itemscope itemtype="http://schema.org/WPHeader">
   <div class="slimContent">
     <div class="navbar-header">
@@ -313,86 +314,45 @@
 
   
   <main class="main" role="main">
-  
-  <div class="content article-list">
-    
-      <article class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
-  <div class="article-header">
-    
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/">Ethereum以太坊签名验证算法Java实现</a>
-    </h1>
-  
-
+  <article class="article article-repository article-type-list" itemscope>
+  <header class="article-header">
+    <h1 itemprop="title">Repositories</h1>
+    <p class="text-muted">I have <span id="repo-count">0</span> projects on Github</p>
+  </header>
+  <div class="article-body">
+    <div class="repo-content">
+      <div class="blankslate">
+        <p>正在加载...</p>
+      </div>
+    </div>
   </div>
-  
-  <p class="article-meta">
-    <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/" class="article-date">
-	  <time datetime="2019-02-16T07:41:00.000Z" itemprop="datePublished">2月 16</time>
-	</a>
-</span>
-    
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/以太坊/">以太坊</a>
-  </span>
-
-    
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/Ethereum/">Ethereum</a>, <a class="article-tag-link" href="/tags/Java/">Java</a>, <a class="article-tag-link" href="/tags/以太坊/">以太坊</a>, <a class="article-tag-link" href="/tags/加密/">加密</a>
-  </span>
-
-
-    <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/#comments" class="article-comment-link">评论</a></span>
-    
-  </p>
 </article>
 
-    
-      <article class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
-  <div class="article-header">
-    
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/02/15/hello-world/">Hello World</a>
-    </h1>
   
 
-  </div>
-  
-  <p class="article-meta">
-    <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/2019/02/15/hello-world/" class="article-date">
-	  <time datetime="2019-02-15T05:44:08.168Z" itemprop="datePublished">2月 15</time>
-	</a>
-</span>
-    
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/文章分类/">文章分类</a>
-  </span>
-
-    
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/文章标签/">文章标签</a>
-  </span>
 
 
-    <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2019/02/15/hello-world/#comments" class="article-comment-link">评论</a></span>
-    
-  </p>
-</article>
-
-    
-  </div>
-
-   
+<!--Github项模版-->
+<script type="text/template" id="list-template">
+  <li class="col-sm-6 col-md-6 col-lg-4">
+    <div class="repo hover-shadow hover-grow">
+      <div class="repo-image geopattern" data-pattern-id="{%=name%}"></div>
+      <h3 class="repo-title"><a href="{%=clone_url%}" target="_blank" rel="external nofollow noopener noreferrer">{%=full_name%}</a></h3>
+      <p class="repo-body">{%=description%}</p>
+      <div class="repo-meta">
+        <span class="meta meta-type pull-left" aria-label="{%=language%} project">{%=language%}</span>
+        <span class="meta meta-star" aria-label="{%=stargazers_count%} stars"><i class="icon icon-star-fill"></i> {%=stargazers_count%}</span>
+        <span class="meta meta-fork" aria-label="{%=forks_count%} forks"><i class="icon icon-code-fork"></i> {%=forks_count%}</span>
+        <span class="meta meta-last-updated" aria-label="最后更新时间：{%=updated_at%}">
+        <i class="icon icon-clock"></i> <time datetime="{%=updated_at%}">{%=updated_at%}</time></span>
+      </div>
+    </div>
+  </li>
+</script>
+<!--获取失败模版-->
+<script type="text/template" id="error-template">
+  <h3>加载失败</h3><p>请刷新或稍后再试...</p>
+</script>
 </main>
 
   <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
@@ -442,10 +402,49 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 
 
 
+   <script type="text/javascript">
+var open = function() {
+  var baiduTpl = new Object();
+  var handleTpl = function() {
+    baiduTpl.list = baidu.template("list-template");
+    baiduTpl.error = baidu.template("error-template");
+  };
 
+  var handleGithub = function() {
+    var repoContainer = $('.repo-content');
+    var errorContainer = repoContainer.find(".blankslate");
+    var countContainer = $("#repo-count");
 
-   
-<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    $.get("https://api.github.com/users/Formyown/repos", function(result) {
+      if (result) {
+        errorContainer.remove();
+        countContainer.text(result.length); //设置项目个数
+        var ul = $("<ul class='repo-list row clearfix'></ul>");
+        for (var i in result) {
+          var repo = result[i];
+          repo.updated_at = repo.updated_at.substring(0, repo.updated_at.lastIndexOf("T"));
+          var html = baiduTpl.list(repo);
+          ul.append(html);
+        }
+        repoContainer.append(ul);
+        $(".geopattern").each(function() {
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+      } else {
+        errorContainer.append(baiduTpl.error());
+      }
+    });
+  };
+
+  return {
+    init: function() {
+      handleTpl();
+      handleGithub();
+    }
+  }
+};
+$(open().init);
+</script>
 
 
 
