@@ -26,14 +26,14 @@
 <meta property="og:site_name" content="Formyown的博客">
 <meta property="og:description" content="开始之前 在验证之前，我们需要这些基本的信息: 签名，原文，地址（或者公钥）  Sig: 0x5f3c4ab309427d25cdc34a41cb432610c6c817e76ce9aec0c9336365063687ff29c92963edd6935f365d5f28c146f227881b626c7db18e87b9baf2089729741b1c Message: 签名这段文字以验证你是这">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/Ethereum%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E7%AE%97%E6%B3%95Java%E5%AE%9E%E7%8E%B0/lizi.jpg">
-<meta property="og:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/Ethereum%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E7%AE%97%E6%B3%95Java%E5%AE%9E%E7%8E%B0/eth_sig.png">
-<meta property="og:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/Ethereum%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E7%AE%97%E6%B3%95Java%E5%AE%9E%E7%8E%B0/secp256k1.png">
-<meta property="og:updated_time" content="2019-02-16T17:17:16.975Z">
+<meta property="og:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/lizi.jpg">
+<meta property="og:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/eth_sig.png">
+<meta property="og:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/secp256k1.png">
+<meta property="og:updated_time" content="2019-02-16T17:27:10.425Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Ethereum以太坊签名验证算法Java实现">
 <meta name="twitter:description" content="开始之前 在验证之前，我们需要这些基本的信息: 签名，原文，地址（或者公钥）  Sig: 0x5f3c4ab309427d25cdc34a41cb432610c6c817e76ce9aec0c9336365063687ff29c92963edd6935f365d5f28c146f227881b626c7db18e87b9baf2089729741b1c Message: 签名这段文字以验证你是这">
-<meta name="twitter:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/Ethereum%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E7%AE%97%E6%B3%95Java%E5%AE%9E%E7%8E%B0/lizi.jpg">
+<meta name="twitter:image" content="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/lizi.jpg">
   <!-- Canonical links -->
   <link rel="canonical" href="http://formyown.github.io/2019/02/16/Ethereum以太坊签名验证算法Java实现/index.html">
   
@@ -43,6 +43,8 @@
     <link rel="icon" href="/favicon.png" type="image/x-icon">
   
   <link rel="stylesheet" href="/css/style.css">
+  
+    <link href="//cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.css" rel="stylesheet">
   
   
   
@@ -372,7 +374,7 @@
       
         <h2 id="开始之前"><a class="markdownIt-Anchor" href="#开始之前"></a> 开始之前</h2>
 <p>在验证之前，我们需要这些基本的信息: 签名，原文，地址（或者公钥）</p>
-<p><img src="/2019/02/16/Ethereum以太坊签名验证算法Java实现/Ethereum%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E7%AE%97%E6%B3%95Java%E5%AE%9E%E7%8E%B0/lizi.jpg" alt></p>
+<p><img src="/2019/02/16/Ethereum以太坊签名验证算法Java实现/lizi.jpg" alt></p>
 <p>Sig: <code>0x5f3c4ab309427d25cdc34a41cb432610c6c817e76ce9aec0c9336365063687ff29c92963edd6935f365d5f28c146f227881b626c7db18e87b9baf2089729741b1c</code></p>
 <p>Message: <code>签名这段文字以验证你是这个账户的持有者。</code></p>
 <p>Address: <code>0x1c52C6F743351fC9b97AE4Fe32194A588398FE69</code></p>
@@ -381,7 +383,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MessageHash = keccak256(prefix + message)</span><br></pre></td></tr></table></figure>
 <p>这个<code>prefix</code>是个什么东西？</p>
 <p>我们来看看签名在生成的时候是如何计算的。在Ethereum官方文档中，关于<code>eth_sig</code>的描述是这样的：</p>
-<p><img src="/2019/02/16/Ethereum以太坊签名验证算法Java实现/Ethereum%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E7%AE%97%E6%B3%95Java%E5%AE%9E%E7%8E%B0/eth_sig.png" alt="原文地址: https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign"></p>
+<p><img src="/2019/02/16/Ethereum以太坊签名验证算法Java实现/eth_sig.png" alt="原文地址: https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign"></p>
 <p>可疑的地方是<code>sign(keccak256(&quot;\x19Ethereum Signed Message:\n&quot; + len(message) + message)))</code>，我们可以看到在message之前添加了一段话：<code>&quot;\x19Ethereum Signed Message:\n&quot; + len(message)</code>。真正被签名的数据不是单纯的message，而是在message之前添加了这句话（prefix）后整体做了hash运算。所以，我们在计算hash的时候，也需要照做。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String message = <span class="string">"签名这段文字以验证你是这个账户的持有者。"</span>;</span><br><span class="line"><span class="keyword">byte</span>[] msgBuffer = message.getBytes(<span class="string">"UTF-8"</span>);</span><br><span class="line"><span class="keyword">byte</span>[] msgPrefix =  (<span class="string">"\u0019Ethereum Signed Message:\n"</span> + msgBuffer.length).getBytes(<span class="string">"UTF-8"</span>);</span><br></pre></td></tr></table></figure>
 <p>现在已经将原始消息和prefix都转换成了字节数组的形式，接下来需要把这两部分拼接起来</p>
@@ -410,7 +412,7 @@ v = 28 (10进制)</p>
 此椭圆曲线的方程是</p>
 <p>y^2 = x^3 + 7</p>
 <p>图像如下</p>
-<p><img src="/2019/02/16/Ethereum以太坊签名验证算法Java实现/Ethereum%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E7%AE%97%E6%B3%95Java%E5%AE%9E%E7%8E%B0/secp256k1.png" alt="secp256k1图像"></p>
+<p><img src="/2019/02/16/Ethereum以太坊签名验证算法Java实现/secp256k1.png" alt="secp256k1图像"></p>
 
       
     </div>
