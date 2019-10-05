@@ -33,8 +33,8 @@ site:
     url: ../images/logo.png
   title: Formyown的小站 # 页面title
   favicon: /favicon.png
-  board: <p>欢迎交流与分享经验!</p> # 站点公告
-  copyright: false # 底部版权信息
+  board: <p></p> # 站点公告
+  copyright: true # 底部版权信息
 
 # config
 config:
@@ -187,7 +187,7 @@ profile:
   avatar: images/avatar.jpg
   gravatar: # Gravatar email address, if you enable Gravatar, your avatar config will be overriden
   author: Formyown
-  author_title: Backend Developer
+  author_title: 全栈开发，目前就职于 北京捷天科技有限责任公司
   author_description: 我是个好人
   location: Sydney, Australia
   follow: https://github.com/formyown
@@ -204,27 +204,22 @@ profile:
     link_tooltip: true # enable the social link tooltip, options: true, false
   # My Skills 
   skills:
-    Git: ★★★☆☆
-    Gulp: ★★★☆☆
-    Javascript: ★★★☆☆
-    HTML+CSS: ★★★☆☆
-    Bootstrap: ★★★☆☆
-    ThinkPHP: ★★★☆☆
-    平面设计: ★★★☆☆
+    Nestjs: ★★★★☆
+    Springboot: ★★★★☆
+    Vue: ★★★☆☆
+    小程序开发: ★★★☆☆
+    内核驱动开发: ★★★☆☆
   # My Personal Links
   links:
-    Github: https://github.com/cofess
-    Blog: http://blog.cofess.com
-    微博: http://weibo.com/cofess
-    花瓣: http://huaban.com/cofess
-    Behance: https://www.behance.net/cofess
+    Github: https://github.com/formyown
+    # Blog: http://blog.cofess.com
+    # 微博: http://weibo.com/cofess
+    # 花瓣: http://huaban.com/cofess
+    # Behance: https://www.behance.net/cofess
   # My Personal Labels
   labels:
-    - 前端
+    - 后端开发
     - 前端开发
-    - 前端重构
-    - Web前端
-    - 网页重构
   # My Personal Works
   works:
     name:
