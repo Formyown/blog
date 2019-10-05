@@ -13,7 +13,6 @@ before_install:
 # Start: Build Lifecycle
 install:
   - npm install
-  - npm install hexo-deployer-git --save
 
 script:
   - hexo clean
