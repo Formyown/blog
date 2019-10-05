@@ -3,12 +3,20 @@ language: node_js
 node_js:
   - 10 # use nodejs v10 LTS
 cache: npm
-install:
-  - npm install
 branches:
   only:
-    - master # build master branch only
+    - hexo 
+
+before_install:
+  - npm install -g hexo-cli
+
+# Start: Build Lifecycle
+install:
+  - npm install
+  - npm install hexo-deployer-git --save
+
 script:
+  - hexo clean
   - hexo generate # generate static files
 deploy:
   provider: pages
