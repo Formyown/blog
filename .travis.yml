@@ -17,11 +17,12 @@ install:
 script:
   - hexo clean
   - hexo generate # generate static files
-deploy:
-  provider: pages
-  github-token: $GH_TOKEN
-  on:
-    branches:    
-      only:      
-        - master 
-  local-dir: public
+
+after_script:
+  - cd ./public
+  - git init
+  - git config user.name "formyown"
+  - git config user.email "1119242459@qq.com"
+  - git add .
+  - git commit -m "Deploy blog pages"
+  - git push --force --quiet "https://${GH_TOKEN}@github.com/formyown/formyown.github.io" master:master
