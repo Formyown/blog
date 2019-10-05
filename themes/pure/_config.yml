@@ -188,8 +188,8 @@ profile:
   gravatar: # Gravatar email address, if you enable Gravatar, your avatar config will be overriden
   author: Formyown
   author_title: 全栈开发工程师
-  author_description: 目前就职于北京捷天科技有限责任公司
-  location: Sydney, Australia<br/>北京，中国
+  author_description: 君子不器
+  location: Sydney, Australia 北京，中国
   follow: https://github.com/formyown
   # Social Links
   social:
