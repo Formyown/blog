@@ -39,7 +39,7 @@ export class OrderItem {
 
 }
 ```
-我们的目标是将 OrderItem 类型的对象转换到 OrderItemTransfer 类型。于是有以下代码：
+我们的目标是将 `OrderItem` 类型的对象转换到 `OrderItemTransfer` 类型。于是有以下代码：
 ```typescript
 let transfer = plainToClass(OrderItemTransfer, entity);
 //发生异常: Error
@@ -52,17 +52,17 @@ let transfer = plainToClass(OrderItemTransfer, entity);
 
 ![stack](stack.png)
 
-找到调用Decimal构造函数的具体代码
+找到调用`Decimal`构造函数的具体代码
 
 ![caller](caller.png)
 
-可以看到，这里直接调用了Decimal构造函数，然而Decimal的构造函数并不支持参数是null/undefined从而引发了异常。
+可以看到，这里直接调用了`Decimal`构造函数，然而Decimal的构造函数并不支持参数是`null`/`undefined`从而引发了异常。
 
-plainToClass这个方法的设计是针对plain object到class的转换，通过下图可见，他的类型判断相对简单
+`plainToClass`这个方法的设计是针对`plain object`到`class`的转换，通过下图可见，他的类型判断相对简单
 
 ![type-check](type-check.png)
 
-在判断对象类型是objec之后并没有进一步判断构造函数相关信息（针对plain object的设计并不需要判断，因为这种情况并不存在自定义的构造函数）。但是这种特性恰巧妨碍了我们使用类似于Decimal这种没有默认构造函数的类型。
+在判断对象类型是`object`之后并没有进一步判断构造函数相关信息（针对`plain object`的设计并不需要判断，因为这种情况并不存在自定义的构造函数）。但是这种特性恰巧妨碍了我们使用类似于`Decimal`这种没有默认构造函数的类型。
 
 ## 解决方案
 
@@ -76,7 +76,7 @@ else if (value[valueKey] instanceof Function) {
 
 这个解决方案真的能解决问题么？答案是：可以，但不优雅。
 
-与其提交pr给class-transformer不如从另外一个角度来解决，那就是从Decimal.js下手。由于问题发生在Decimal类型没有默认的构造函数，那么我们为何不拓展以下这个类型呢？
+与其提交pr给`class-transformer`不如从另外一个角度来解决，那就是从`Decimal.js`下手。由于问题发生在Decimal类型没有默认的构造函数，那么我们为何不拓展以下这个类型呢？
 
 ```typescript
 class DecimalPatch {
@@ -91,11 +91,11 @@ class DecimalPatch {
 
 看到这里，你可能要问几个问题：
 
-为什么不用extends呢？答案是class-transformer拿到的类型仍是Decimal的构造函数
+为什么不用`extends`呢？答案是`class-transformer`拿到的类型仍是Decimal的构造函数
 
-为什么要delete d.constructor呢？答案是防止plainToClass再次调用constructor
+为什么要`delete d.constructor`呢？答案是防止`plainToClass`再次调用`constructor`
 
-(这个方法很迷，它会调用源对象的所有方法求值赋值给目标对象，看似是为了调用getter作用的函数，但是并没有判断能力，就连构造函数也不放过QAQ。。。)
+(这个方法很迷，它会调用源对象的所有方法求值赋值给目标对象，看似是为了调用`getter`作用的函数，但是并没有判断能力，就连构造函数也不放过QAQ。。。)
 
 现在，你可以这样使用它
 
@@ -133,5 +133,5 @@ from(data: string): DecimalPatch {
     return new DecimalPatch(data);
 }
 ```
-这样，entity中的数据实际类型是DecimalPatch，并且工作一切正常
+这样，`entity`中的数据实际类型是`DecimalPatch`，并且工作一切正常
 
