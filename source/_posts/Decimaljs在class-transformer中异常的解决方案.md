@@ -121,7 +121,7 @@ export class DecimalTransformer implements ValueTransformer {
         return data.toString();
     }
     from(data: string): Decimal {
-        return new Decimal(data); //这里实力化了对象
+        return new Decimal(data); //这里实例化了对象
     }
 }
 ```
