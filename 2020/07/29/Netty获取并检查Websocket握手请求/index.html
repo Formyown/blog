@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>Netty获取并检查Websocket握手请求 | Formyown的小站</title>
+  <meta name="description" content="在使用Netty开发Websocket服务时，通常需要解析来自客户端请求的URL、Headers等等相关内容，并做相关检查或处理。本文将讨论两种实现方法。  方法一：基于HandshakeComplete自定义事件  特点：使用简单、校验在握手成功之后、失败信息可以通过Websocket发送回客户端。   1.1 从netty源码出发 一般地，我们将netty内置的WebSocketServerP">
+<meta name="keywords" content="Netty,Websocket">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Netty获取并检查Websocket握手请求">
+<meta property="og:url" content="http://formyown.github.io/2020/07/29/Netty获取并检查Websocket握手请求/index.html">
+<meta property="og:site_name" content="Formyown的博客">
+<meta property="og:description" content="在使用Netty开发Websocket服务时，通常需要解析来自客户端请求的URL、Headers等等相关内容，并做相关检查或处理。本文将讨论两种实现方法。  方法一：基于HandshakeComplete自定义事件  特点：使用简单、校验在握手成功之后、失败信息可以通过Websocket发送回客户端。   1.1 从netty源码出发 一般地，我们将netty内置的WebSocketServerP">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-29T08:23:34.920Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Netty获取并检查Websocket握手请求">
+<meta name="twitter:description" content="在使用Netty开发Websocket服务时，通常需要解析来自客户端请求的URL、Headers等等相关内容，并做相关检查或处理。本文将讨论两种实现方法。  方法一：基于HandshakeComplete自定义事件  特点：使用简单、校验在握手成功之后、失败信息可以通过Websocket发送回客户端。   1.1 从netty源码出发 一般地，我们将netty内置的WebSocketServerP">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://formyown.github.io/2020/07/29/Netty获取并检查Websocket握手请求/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Formyown的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="../images/logo.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.4.0/dist/gitalk.min.css">
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/formyown" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Formyown</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">全栈开发工程师</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Sydney, Australia 北京，中国</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索">
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech>
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">项目</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">书单</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/formyown" target="_blank" title="Github" data-toggle="tooltip" data-placement="top"><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/formyown" target="_blank" title="Weibo" data-toggle="tooltip" data-placement="top"><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle="tooltip" data-placement="top"><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">公告</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/">JavaScript</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/TypeScript/">TypeScript</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Netty/">Netty</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Netty/Websocket/">Websocket</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/以太坊/">以太坊</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Decimal-js/">Decimal.js</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ethereum/">Ethereum</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Netty/">Netty</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Websocket/">Websocket</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/class-transformer/">class-transformer</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/以太坊/">以太坊</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/加密/">加密</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Decimal-js/" style="font-size: 13px;">Decimal.js</a> <a href="/tags/Ethereum/" style="font-size: 13px;">Ethereum</a> <a href="/tags/Java/" style="font-size: 13px;">Java</a> <a href="/tags/Netty/" style="font-size: 13px;">Netty</a> <a href="/tags/Websocket/" style="font-size: 13px;">Websocket</a> <a href="/tags/class-transformer/" style="font-size: 13px;">class-transformer</a> <a href="/tags/以太坊/" style="font-size: 13px;">以太坊</a> <a href="/tags/加密/" style="font-size: 13px;">加密</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">七月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">十二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled ">
+        
+          <li>
+            
+            <div class="item-thumb">
+              <a href="/2020/07/29/Netty获取并检查Websocket握手请求/" class="thumb">
+    
+    
+        <span class="thumb-image thumb-none"></span>
+    
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Netty/">Netty</a><i class="icon icon-angle-right"></i><a class="category-link" href="/categories/Netty/Websocket/">Websocket</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/07/29/Netty获取并检查Websocket握手请求/" class="title">Netty获取并检查Websocket握手请求</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-07-29T12:00:00.000Z" itemprop="datePublished">2020-07-29</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-thumb">
+              <a href="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/" class="thumb">
+    
+    
+        <span class="thumb-image thumb-none"></span>
+    
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/JavaScript/">JavaScript</a><i class="icon icon-angle-right"></i><a class="category-link" href="/categories/JavaScript/TypeScript/">TypeScript</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/" class="title">Decimaljs在class-transformer中异常的解决方案</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-12-17T03:07:09.000Z" itemprop="datePublished">2019-12-17</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-thumb">
+              <a href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/" class="thumb">
+    
+    
+        <span class="thumb-image thumb-none"></span>
+    
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/以太坊/">以太坊</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/" class="title">Ethereum以太坊签名验证算法Java实现</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-02-16T15:41:00.000Z" itemprop="datePublished">2019-02-16</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#方法一基于handshakecomplete自定义事件"><span class="toc-number">1.</span> <span class="toc-text"> 方法一：基于HandshakeComplete自定义事件</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#11-从netty源码出发"><span class="toc-number">1.1.</span> <span class="toc-text"> 1.1 从netty源码出发</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#12-解决方案"><span class="toc-number">1.2.</span> <span class="toc-text"> 1.2 解决方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#13-channelinitializer实现"><span class="toc-number">1.3.</span> <span class="toc-text"> 1.3 ChannelInitializer实现</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#方法二基于新增安全检查处理器"><span class="toc-number">2.</span> <span class="toc-text"> 方法二：基于新增安全检查处理器</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#21-解决方案"><span class="toc-number">2.1.</span> <span class="toc-text"> 2.1 解决方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#22-channelinitializer实现"><span class="toc-number">2.2.</span> <span class="toc-text"> 2.2 ChannelInitializer实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">2.3.</span> <span class="toc-text"> 总结</span></a></li></ol></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Netty获取并检查Websocket握手请求" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Netty获取并检查Websocket握手请求
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/07/29/Netty获取并检查Websocket握手请求/" class="article-date">
+	  <time datetime="2020-07-29T12:00:00.000Z" itemprop="datePublished">2020-07-29</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Netty/">Netty</a>►<a class="article-category-link" href="/categories/Netty/Websocket/">Websocket</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Netty/">Netty</a>, <a class="article-tag-link" href="/tags/Websocket/">Websocket</a>
+  </span>
+
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/07/29/Netty获取并检查Websocket握手请求/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>在使用Netty开发Websocket服务时，通常需要解析来自客户端请求的URL、Headers等等相关内容，并做相关检查或处理。本文将讨论两种实现方法。</p>
+<h1 id="方法一基于handshakecomplete自定义事件"><a class="markdownIt-Anchor" href="#方法一基于handshakecomplete自定义事件"></a> 方法一：基于HandshakeComplete自定义事件</h1>
+<blockquote>
+<p>特点：使用简单、校验在握手成功之后、失败信息可以通过Websocket发送回客户端。</p>
+</blockquote>
+<h2 id="11-从netty源码出发"><a class="markdownIt-Anchor" href="#11-从netty源码出发"></a> 1.1 从netty源码出发</h2>
+<p>一般地，我们将netty内置的<code>WebSocketServerProtocolHandler</code>作为Websocket协议的主要处理器。通过研究其代码我们了解到在本处理器被添加到<code>Pipline</code>后<code>handlerAdded</code>方法将会被调用。此方法经过简单的检查后将<code>WebSocketHandshakeHandler</code>添加到了本处理器之前，用于处理握手相关业务。</p>
+<p>我们都知道Websocket协议在握手时是通过HTTP(S)协议进行的，那么这个<code>WebSocketHandshakeHandler</code>应该就是处理HTTP相关的数据的吧？</p>
+<p>下方代码经过精简，放心阅读😄</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> io.netty.handler.codec.http.websocketx;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WebSocketServerProtocolHandler</span> <span class="keyword">extends</span> <span class="title">WebSocketProtocolHandler</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handlerAdded</span><span class="params">(ChannelHandlerContext ctx)</span> </span>&#123;</span><br><span class="line">        ChannelPipeline cp = ctx.pipeline();</span><br><span class="line">        <span class="keyword">if</span> (cp.get(WebSocketServerProtocolHandshakeHandler.class) == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// Add the WebSocketHandshakeHandler before this one.</span></span><br><span class="line">            cp.addBefore(ctx.name(), WebSocketServerProtocolHandshakeHandler.class.getName(),</span><br><span class="line">                    <span class="keyword">new</span> WebSocketServerProtocolHandshakeHandler(serverConfig));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们来看看<code>WebSocketServerProtocolHandshakeHandler</code>都做了什么操作。</p>
+<p><code>channelRead</code>方法会尝试接收一个<code>FullHttpRequest</code>对象，表示来自客户端的HTTP请求，随后服务器将会进行握手相关操作，此处省略了握手大部分代码，感兴趣的同学可以自行阅读。</p>
+<p>可以注意到，在确认握手成功后，<code>channelRead</code>将会调用两次<code>fireUserEventTriggered</code>，此方法将会触发其他（在此处理器之后）的处理器中名为的<code>serEventTriggered</code>方法。其中一个方法传入了<code>WebSocketServerProtocolHandler</code>对象，此对象保存了HTTP请求相关信息。那么解决方案逐渐浮出水面，通过监听自定义事件即可实现检查握手的HTTP请求。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> io.netty.handler.codec.http.websocketx;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Handles the HTTP handshake (the HTTP Upgrade request) for &#123;<span class="doctag">@link</span> WebSocketServerProtocolHandler&#125;.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WebSocketServerProtocolHandshakeHandler</span> <span class="keyword">extends</span> <span class="title">ChannelInboundHandlerAdapter</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">channelRead</span><span class="params">(<span class="keyword">final</span> ChannelHandlerContext ctx, Object msg)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> FullHttpRequest req = (FullHttpRequest) msg;</span><br><span class="line">        <span class="keyword">if</span> (isNotWebSocketPath(req)) &#123;</span><br><span class="line">            ctx.fireChannelRead(msg);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//...</span></span><br><span class="line">                </span><br><span class="line">            <span class="keyword">if</span> (!future.isSuccess()) &#123;</span><br><span class="line">                </span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                localHandshakePromise.trySuccess();</span><br><span class="line">                <span class="comment">// Kept for compatibility</span></span><br><span class="line">                ctx.fireUserEventTriggered(</span><br><span class="line">                        WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE);</span><br><span class="line">                ctx.fireUserEventTriggered(</span><br><span class="line">                        <span class="keyword">new</span> WebSocketServerProtocolHandler.HandshakeComplete(</span><br><span class="line">                                req.uri(), req.headers(), handshaker.selectedSubprotocol()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            req.release();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="12-解决方案"><a class="markdownIt-Anchor" href="#12-解决方案"></a> 1.2 解决方案</h2>
+<p>下面的代码展示了如何监听自定义事件。通过抛出异常可以终止链接，同时可以利用<code>ctx</code>向客户端以Websocket协议返回错误信息。因为此时握手已经完成，所以虽然这种方案简单的过分，但是效率并不高，耗费服务端资源。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerHandler</span> <span class="keyword">extends</span> <span class="title">SimpleChannelInboundHandler</span>&lt;<span class="title">DeviceDataPacket</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">userEventTriggered</span><span class="params">(ChannelHandlerContext ctx, Object evt)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (evt <span class="keyword">instanceof</span> WebSocketServerProtocolHandler.HandshakeComplete) &#123;</span><br><span class="line">            <span class="comment">// 在此处获取URL、Headers等信息并做校验，通过throw异常来中断链接。</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">super</span>.userEventTriggered(ctx, evt);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="13-channelinitializer实现"><a class="markdownIt-Anchor" href="#13-channelinitializer实现"></a> 1.3 ChannelInitializer实现</h2>
+<p>附上Channel初始化代码作为参考。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerInitializer</span> <span class="keyword">extends</span> <span class="title">ChannelInitializer</span>&lt;<span class="title">SocketChannel</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> </span>&#123;</span><br><span class="line">        ch.pipeline()</span><br><span class="line">                .addLast(<span class="string">"http-codec"</span>, <span class="keyword">new</span> HttpServerCodec())</span><br><span class="line">                .addLast(<span class="string">"chunked-write"</span>, <span class="keyword">new</span> ChunkedWriteHandler())</span><br><span class="line">                .addLast(<span class="string">"http-aggregator"</span>, <span class="keyword">new</span> HttpObjectAggregator(<span class="number">8192</span>))</span><br><span class="line">                .addLast(<span class="string">"log-handler"</span>, <span class="keyword">new</span> LoggingHandler(LogLevel.WARN))</span><br><span class="line">                .addLast(<span class="string">"ws-server-handler"</span>, <span class="keyword">new</span> WebSocketServerProtocolHandler(endpointUri.getPath()))</span><br><span class="line">                .addLast(<span class="string">"server-handler"</span>, <span class="keyword">new</span> ServerHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="方法二基于新增安全检查处理器"><a class="markdownIt-Anchor" href="#方法二基于新增安全检查处理器"></a> 方法二：基于新增安全检查处理器</h1>
+<blockquote>
+<p>特点：使用相对复杂、校验在握手成功之前、失败信息可以通过HTTP返回客户端。</p>
+</blockquote>
+<h2 id="21-解决方案"><a class="markdownIt-Anchor" href="#21-解决方案"></a> 2.1 解决方案</h2>
+<p>编写一个入站处理器，接收<code>FullHttpMessage</code>消息，在Websocket处理器之前检测拦截请求信息。下面的例子主要做了四件事情：</p>
+<ol>
+<li>从HTTP请求中提取关心的数据</li>
+<li>安全检查</li>
+<li>将结果和其他数据绑定在Channel</li>
+<li>触发安全检查完毕自定义事件</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SecurityServerHandler</span> <span class="keyword">extends</span> <span class="title">ChannelInboundHandlerAdapter</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ObjectMapper json = <span class="keyword">new</span> ObjectMapper();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> AttributeKey&lt;SecurityCheckComplete&gt; SECURITY_CHECK_COMPLETE_ATTRIBUTE_KEY =</span><br><span class="line">            AttributeKey.valueOf(<span class="string">"SECURITY_CHECK_COMPLETE_ATTRIBUTE_KEY"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">channelRead</span><span class="params">(ChannelHandlerContext ctx, Object msg)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(msg <span class="keyword">instanceof</span> FullHttpMessage)&#123;</span><br><span class="line">            <span class="comment">//extracts device information headers</span></span><br><span class="line">            HttpHeaders headers = ((FullHttpMessage) msg).headers();</span><br><span class="line">            String uuid = Objects.requireNonNull(headers.get(<span class="string">"device-connection-uuid"</span>));</span><br><span class="line">            String devDescJson = Objects.requireNonNull(headers.get(<span class="string">"device-description"</span>));</span><br><span class="line">            <span class="comment">//deserialize device description</span></span><br><span class="line">            DeviceDescription devDesc = json.readValue(devDescJson, DeviceDescriptionWithCertificate.class);</span><br><span class="line">            <span class="comment">//check ......</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">//</span></span><br><span class="line">            SecurityCheckComplete complete = <span class="keyword">new</span> SecurityCheckComplete(uuid, devDesc);</span><br><span class="line">            ctx.channel().attr(SECURITY_CHECK_COMPLETE_ATTRIBUTE_KEY).set(complete);</span><br><span class="line">            ctx.fireUserEventTriggered(complete);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//other protocols</span></span><br><span class="line">        <span class="keyword">super</span>.channelRead(ctx, msg);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Getter</span></span><br><span class="line">    <span class="meta">@AllArgsConstructor</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">SecurityCheckComplete</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> String connectionUUID;</span><br><span class="line">        <span class="keyword">private</span> DeviceDescription deviceDescription;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在业务逻辑处理器中，可以通过组合自定义的安全检查事件和Websocket握手完成事件。例如，在安全检查后进行下一步自定义业务检查，在握手完成后发送自定义内容等等，就看各位同学自由发挥了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerHandler</span> <span class="keyword">extends</span> <span class="title">SimpleChannelInboundHandler</span>&lt;<span class="title">DeviceDataPacket</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> AttributeKey&lt;DeviceConnection&gt; </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">userEventTriggered</span><span class="params">(ChannelHandlerContext ctx, Object evt)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (evt <span class="keyword">instanceof</span> SecurityCheckComplete)&#123;</span><br><span class="line">            log.info(<span class="string">"Security check has passed"</span>);</span><br><span class="line">            SecurityCheckComplete complete = (SecurityCheckComplete) evt;</span><br><span class="line">            listener.beforeConnect(complete.getConnectionUUID(), complete.getDeviceDescription());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (evt <span class="keyword">instanceof</span> WebSocketServerProtocolHandler.HandshakeComplete) &#123;</span><br><span class="line">            log.info(<span class="string">"Handshake has completed"</span>);</span><br><span class="line">            SecurityCheckComplete complete = ctx.channel().attr(SecurityServerHandler.SECURITY_CHECK_COMPLETE_ATTRIBUTE_KEY).get();</span><br><span class="line">            DeviceDataServer.<span class="keyword">this</span>.listener.postConnect(complete.getConnectionUUID(),</span><br><span class="line">                    <span class="keyword">new</span> DeviceConnection(ctx.channel(), complete.getDeviceDescription()));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">super</span>.userEventTriggered(ctx, evt);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="22-channelinitializer实现"><a class="markdownIt-Anchor" href="#22-channelinitializer实现"></a> 2.2 ChannelInitializer实现</h2>
+<p>附上Channel初始化代码作为参考。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerInitializer</span> <span class="keyword">extends</span> <span class="title">ChannelInitializer</span>&lt;<span class="title">SocketChannel</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> </span>&#123;</span><br><span class="line">        ch.pipeline()</span><br><span class="line">                .addLast(<span class="string">"http-codec"</span>, <span class="keyword">new</span> HttpServerCodec())</span><br><span class="line">                .addLast(<span class="string">"chunked-write"</span>, <span class="keyword">new</span> ChunkedWriteHandler())</span><br><span class="line">                .addLast(<span class="string">"http-aggregator"</span>, <span class="keyword">new</span> HttpObjectAggregator(<span class="number">8192</span>))</span><br><span class="line">                .addLast(<span class="string">"log-handler"</span>, <span class="keyword">new</span> LoggingHandler(LogLevel.WARN))</span><br><span class="line">                .addLast(<span class="string">"security-handler"</span>, <span class="keyword">new</span> SecurityServerHandler())</span><br><span class="line">                .addLast(<span class="string">"ws-server-handler"</span>, <span class="keyword">new</span> WebSocketServerProtocolHandler(endpointUri.getPath()))</span><br><span class="line">                .addLast(<span class="string">"packet-codec"</span>, <span class="keyword">new</span> DataPacketCodec())</span><br><span class="line">                .addLast(<span class="string">"server-handler"</span>, <span class="keyword">new</span> ServerHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>上述两种方式分别在握手完成后和握手之前拦截检查；实现复杂度和性能略有不同，可以通过具体业务需求选择合适的方法。</p>
+<p>Netty增强了责任链模式，使用<code>userEvent</code>传递自定义事件使得各个处理器之间减少耦合，更专注于业务。但是、相比于流动于各个处理器之间的&quot;主线&quot;数据来说，<code>userEvent</code>传递的&quot;支线&quot;数据往往不受关注。通过阅读Netty内置的各种处理器源码，探索其产生的事件，同时在开发过程中加以善用，可以减少冗余代码。另外在开发自定义的业务逻辑时，应该积极利用<code>userEvent</code>传递事件数据，降低各模块之间代码耦合。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://formyown.github.io/2020/07/29/Netty获取并检查Websocket握手请求/" title="Netty获取并检查Websocket握手请求" target="_blank" rel="external">http://formyown.github.io/2020/07/29/Netty获取并检查Websocket握手请求/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/formyown" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt>
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/formyown" target="_blank"><span class="text-dark">Formyown</span><small class="ml-1x">全栈开发工程师</small></a></h3>
+        <div>君子不器</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+           
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    
+    <li class="next">
+      <a href="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/" title="Decimaljs在class-transformer中异常的解决方案"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/formyown" target="_blank" title="Github" data-toggle="tooltip" data-placement="top"><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/formyown" target="_blank" title="Weibo" data-toggle="tooltip" data-placement="top"><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle="tooltip" data-placement="top"><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        &copy; 2020 Formyown
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+   
+    
+  <!-- <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css"> -->
+  <script src="//cdn.jsdelivr.net/npm/gitalk@1.4.0/dist/gitalk.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script>
+  <script type="text/javascript">
+  var gitalk = new Gitalk({
+    clientID: '',
+    clientSecret: '',
+    repo: '',
+    owner: '',
+    admin: [''],
+    id: md5(location.pathname),
+    distractionFreeMode: true
+  })
+  gitalk.render('comments')
+  </script>
+
+      
+
+
+
+
+
+
+
+</body>
+</html>

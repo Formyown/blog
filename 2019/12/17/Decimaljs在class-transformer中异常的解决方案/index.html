@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>Decimaljs在class-transformer中异常的解决方案 | Formyown的小站</title>
+  <meta name="description" content="背景 在使用class-transformer进行对象转换并且遇到类型为Decimal的数据时工作不正常  异常复现 我们有以下类型，是目标对象： 1234567export class OrderItemTransfer &amp;#123;    ///忽略其他无关内容    @Expose()    price: Decimal;&amp;#125; 以及，源对象定义： 123456789101112@E">
+<meta name="keywords" content="Decimal.js,class-transformer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Decimaljs在class-transformer中异常的解决方案">
+<meta property="og:url" content="http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/index.html">
+<meta property="og:site_name" content="Formyown的博客">
+<meta property="og:description" content="背景 在使用class-transformer进行对象转换并且遇到类型为Decimal的数据时工作不正常  异常复现 我们有以下类型，是目标对象： 1234567export class OrderItemTransfer &amp;#123;    ///忽略其他无关内容    @Expose()    price: Decimal;&amp;#125; 以及，源对象定义： 123456789101112@E">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/stack.png">
+<meta property="og:image" content="http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/caller.png">
+<meta property="og:image" content="http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/type-check.png">
+<meta property="og:updated_time" content="2020-07-29T08:23:34.916Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Decimaljs在class-transformer中异常的解决方案">
+<meta name="twitter:description" content="背景 在使用class-transformer进行对象转换并且遇到类型为Decimal的数据时工作不正常  异常复现 我们有以下类型，是目标对象： 1234567export class OrderItemTransfer &amp;#123;    ///忽略其他无关内容    @Expose()    price: Decimal;&amp;#125; 以及，源对象定义： 123456789101112@E">
+<meta name="twitter:image" content="http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/stack.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Formyown的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="../images/logo.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.4.0/dist/gitalk.min.css">
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/formyown" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Formyown</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">全栈开发工程师</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Sydney, Australia 北京，中国</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索">
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech>
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">项目</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">书单</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/formyown" target="_blank" title="Github" data-toggle="tooltip" data-placement="top"><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/formyown" target="_blank" title="Weibo" data-toggle="tooltip" data-placement="top"><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle="tooltip" data-placement="top"><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">公告</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/">JavaScript</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/TypeScript/">TypeScript</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Netty/">Netty</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Netty/Websocket/">Websocket</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/以太坊/">以太坊</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Decimal-js/">Decimal.js</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ethereum/">Ethereum</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Netty/">Netty</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Websocket/">Websocket</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/class-transformer/">class-transformer</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/以太坊/">以太坊</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/加密/">加密</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Decimal-js/" style="font-size: 13px;">Decimal.js</a> <a href="/tags/Ethereum/" style="font-size: 13px;">Ethereum</a> <a href="/tags/Java/" style="font-size: 13px;">Java</a> <a href="/tags/Netty/" style="font-size: 13px;">Netty</a> <a href="/tags/Websocket/" style="font-size: 13px;">Websocket</a> <a href="/tags/class-transformer/" style="font-size: 13px;">class-transformer</a> <a href="/tags/以太坊/" style="font-size: 13px;">以太坊</a> <a href="/tags/加密/" style="font-size: 13px;">加密</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">七月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">十二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled ">
+        
+          <li>
+            
+            <div class="item-thumb">
+              <a href="/2020/07/29/Netty获取并检查Websocket握手请求/" class="thumb">
+    
+    
+        <span class="thumb-image thumb-none"></span>
+    
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Netty/">Netty</a><i class="icon icon-angle-right"></i><a class="category-link" href="/categories/Netty/Websocket/">Websocket</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/07/29/Netty获取并检查Websocket握手请求/" class="title">Netty获取并检查Websocket握手请求</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-07-29T12:00:00.000Z" itemprop="datePublished">2020-07-29</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-thumb">
+              <a href="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/" class="thumb">
+    
+    
+        <span class="thumb-image thumb-none"></span>
+    
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/JavaScript/">JavaScript</a><i class="icon icon-angle-right"></i><a class="category-link" href="/categories/JavaScript/TypeScript/">TypeScript</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/" class="title">Decimaljs在class-transformer中异常的解决方案</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-12-17T03:07:09.000Z" itemprop="datePublished">2019-12-17</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-thumb">
+              <a href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/" class="thumb">
+    
+    
+        <span class="thumb-image thumb-none"></span>
+    
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/以太坊/">以太坊</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/" class="title">Ethereum以太坊签名验证算法Java实现</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-02-16T15:41:00.000Z" itemprop="datePublished">2019-02-16</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#背景"><span class="toc-number">1.</span> <span class="toc-text"> 背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#异常复现"><span class="toc-number">2.</span> <span class="toc-text"> 异常复现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#异常分析"><span class="toc-number">3.</span> <span class="toc-text"> 异常分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#解决方案"><span class="toc-number">4.</span> <span class="toc-text"> 解决方案</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Decimaljs在class-transformer中异常的解决方案" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Decimaljs在class-transformer中异常的解决方案
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/" class="article-date">
+	  <time datetime="2019-12-17T03:07:09.000Z" itemprop="datePublished">2019-12-17</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/JavaScript/">JavaScript</a>►<a class="article-category-link" href="/categories/JavaScript/TypeScript/">TypeScript</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Decimal-js/">Decimal.js</a>, <a class="article-tag-link" href="/tags/class-transformer/">class-transformer</a>
+  </span>
+
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="背景"><a class="markdownIt-Anchor" href="#背景"></a> 背景</h2>
+<p>在使用<a href="https://github.com/typestack/class-transformer" target="_blank" rel="noopener"><code>class-transformer</code></a>进行对象转换并且遇到类型为Decimal的数据时工作不正常</p>
+<h2 id="异常复现"><a class="markdownIt-Anchor" href="#异常复现"></a> 异常复现</h2>
+<p>我们有以下类型，是目标对象：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">class</span> OrderItemTransfer &#123;</span><br><span class="line">    <span class="comment">///忽略其他无关内容</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Expose</span>()</span><br><span class="line">    price: Decimal;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以及，源对象定义：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span>()</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">class</span> OrderItem &#123;</span><br><span class="line">    <span class="comment">///忽略其他无关内容</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column</span>(&#123;</span><br><span class="line">        <span class="keyword">type</span>: <span class="string">"decimal"</span>,</span><br><span class="line">        precision: <span class="number">5</span>, scale: <span class="number">2</span>, <span class="keyword">default</span>: <span class="number">0</span>,</span><br><span class="line">        transformer: <span class="keyword">new</span> DecimalTransformer()</span><br><span class="line">    &#125;)</span><br><span class="line">    price: Decimal;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们的目标是将 <code>OrderItem</code> 类型的对象转换到 <code>OrderItemTransfer</code> 类型。于是有以下代码：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> transfer = plainToClass(OrderItemTransfer, entity);</span><br><span class="line"><span class="comment">//发生异常: Error</span></span><br><span class="line"><span class="comment">//Error: [DecimalError] Invalid argument: undefined</span></span><br></pre></td></tr></table></figure>
+<h2 id="异常分析"><a class="markdownIt-Anchor" href="#异常分析"></a> 异常分析</h2>
+<p>通过追踪调用栈发现如下信息:</p>
+<p><img src="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/stack.png" alt="stack"></p>
+<p>找到调用<code>Decimal</code>构造函数的具体代码</p>
+<p><img src="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/caller.png" alt="caller"></p>
+<p>可以看到，这里直接调用了<code>Decimal</code>构造函数，然而Decimal的构造函数并不支持参数是<code>null</code>/<code>undefined</code>从而引发了异常。</p>
+<p><code>plainToClass</code>这个方法的设计是针对<code>plain object</code>到<code>class</code>的转换，通过下图可见，他的类型判断相对简单</p>
+<p><img src="/2019/12/17/Decimaljs在class-transformer中异常的解决方案/type-check.png" alt="type-check"></p>
+<p>在判断对象类型是<code>object</code>之后并没有进一步判断构造函数相关信息（针对<code>plain object</code>的设计并不需要判断，因为这种情况并不存在自定义的构造函数）。但是这种特性恰巧妨碍了我们使用类似于<code>Decimal</code>这种没有默认构造函数的类型。</p>
+<h2 id="解决方案"><a class="markdownIt-Anchor" href="#解决方案"></a> 解决方案</h2>
+<p>其实2017年已经有人提过<a href="https://github.com/typestack/class-transformer/issues/92" target="_blank" rel="noopener">这个问题</a>，但是这种情况确实是此方法的设计情况之外，而且官方也并没有给出解决方案。仅有某位用户提供的一个临时性的解决方案:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (value[valueKey] <span class="keyword">instanceof</span> <span class="built_in">Function</span>) &#123;</span><br><span class="line">    subValue = value[valueKey](); --&gt; Comment out <span class="keyword">this</span> line</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个解决方案真的能解决问题么？答案是：可以，但不优雅。</p>
+<p>与其提交pr给<code>class-transformer</code>不如从另外一个角度来解决，那就是从<code>Decimal.js</code>下手。由于问题发生在Decimal类型没有默认的构造函数，那么我们为何不拓展以下这个类型呢？</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> DecimalPatch &#123;</span><br><span class="line">    <span class="keyword">constructor</span>(<span class="params">v</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!v) v = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">let</span> d = <span class="keyword">new</span> Decimal(v) <span class="keyword">as</span> <span class="built_in">any</span>;</span><br><span class="line">        <span class="keyword">delete</span> d.constructor;</span><br><span class="line">        <span class="built_in">Object</span>.assign(<span class="keyword">this</span>, d);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>看到这里，你可能要问几个问题：</p>
+<p>为什么不用<code>extends</code>呢？答案是<code>class-transformer</code>拿到的类型仍是Decimal的构造函数</p>
+<p>为什么要<code>delete d.constructor</code>呢？答案是防止<code>plainToClass</code>再次调用<code>constructor</code></p>
+<p>(这个方法很迷，它会调用源对象的所有方法求值赋值给目标对象，看似是为了调用<code>getter</code>作用的函数，但是并没有判断能力，就连构造函数也不放过QAQ。。。)</p>
+<p>现在，你可以这样使用它</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span>()</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">class</span> OrderItem &#123;</span><br><span class="line">    <span class="comment">///忽略其他无关内容</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column</span>(&#123;</span><br><span class="line">        <span class="keyword">type</span>: <span class="string">"decimal"</span>,</span><br><span class="line">        precision: <span class="number">5</span>, scale: <span class="number">2</span>, <span class="keyword">default</span>: <span class="number">0</span>,</span><br><span class="line">        transformer: <span class="keyword">new</span> DecimalTransformer() <span class="comment">//还记得这里么，</span></span><br><span class="line">        <span class="comment">//解释一下，DecimalTransformer是用于将数据库查询出的数据转换为自定义数据</span></span><br><span class="line">    &#125;)</span><br><span class="line">    price: Decimal;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>它长这个样子</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">class</span> DecimalTransformer <span class="keyword">implements</span> ValueTransformer &#123;</span><br><span class="line">    to(data: Decimal): <span class="built_in">string</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> data.toString();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">from</span>(data: <span class="built_in">string</span>): Decimal &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Decimal(data); <span class="comment">//这里实例化了对象</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么我们可以修改上述代码：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span>(data: <span class="built_in">string</span>): DecimalPatch &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> DecimalPatch(data);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样，<code>entity</code>中的数据实际类型是<code>DecimalPatch</code>，并且工作一切正常</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/" title="Decimaljs在class-transformer中异常的解决方案" target="_blank" rel="external">http://formyown.github.io/2019/12/17/Decimaljs在class-transformer中异常的解决方案/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/formyown" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt>
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/formyown" target="_blank"><span class="text-dark">Formyown</span><small class="ml-1x">全栈开发工程师</small></a></h3>
+        <div>君子不器</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+           
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/07/29/Netty获取并检查Websocket握手请求/" title="Netty获取并检查Websocket握手请求"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2019/02/16/Ethereum以太坊签名验证算法Java实现/" title="Ethereum以太坊签名验证算法Java实现"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/formyown" target="_blank" title="Github" data-toggle="tooltip" data-placement="top"><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/formyown" target="_blank" title="Weibo" data-toggle="tooltip" data-placement="top"><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle="tooltip" data-placement="top"><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        &copy; 2020 Formyown
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+   
+    
+  <!-- <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css"> -->
+  <script src="//cdn.jsdelivr.net/npm/gitalk@1.4.0/dist/gitalk.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script>
+  <script type="text/javascript">
+  var gitalk = new Gitalk({
+    clientID: '',
+    clientSecret: '',
+    repo: '',
+    owner: '',
+    admin: [''],
+    id: md5(location.pathname),
+    distractionFreeMode: true
+  })
+  gitalk.render('comments')
+  </script>
+
+      
+
+
+
+
+
+
+
+</body>
+</html>
